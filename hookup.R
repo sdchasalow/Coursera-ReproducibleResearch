@@ -1,68 +1,52 @@
-hookup <- function( who, p = n - 1 ) {
+hookup <- function( who, p = n - 1, orderMe = TRUE ) {
+#  DESCRIPTION:
+#  Randomly assign p partners to each person named in who.
+#
+#  ARGUMENTS:
+#  who  character vector, giving the names of people to be hooked up.
+#       Duplicate values are allowed, but probably will cause confusion.
+#       Must have length > 1.
+#  p    integer vector of length 1, giving the number of partners to assign
+#       to each member of who.  Must be between 1 and length(who) - 1.
+#       Default is n - 1.
+#  orderMe  logical flag.  If TRUE (the default), rows of return matrix
+#       will be ordered to align with sort(who).  Otherwise, rows will align
+#       with 'who'.
+#  VALUE:
+#       a matrix of the same mode as 'who', with length(who) rows and p
+#       columns.  Row i gives the set of partners for person sort(who)[i].
+#  EXAMPLES:
+#       hookup(c("B", "A", "D", "C"), 2)
+#       hookup(c("B", "A", "D", "C"), 2, orderMe = FALSE)
+#       hookup(1:4, 3)
+#       
    n <- length(who)
-   if ( p >= n )
-      stop( "p >= n, that is too weird.")
-   whonum <- seq_len( n )
-   nmat <- array( NA, c(n, p) )
-   counts <- numeric( n )
-   # Assign first partner to each person in who:
-   # See Examples under ?sample to understand why I use sample.int construct.
-   j <- 1
-   for ( i in whonum ) {
-      cands <- whonum[ whonum != i & counts < j ]
-      pick <- cands[ sample.int( length(cands), size = 1 ) ]
-      # pick <- sample( cands, 1 ) # This often breaks when length(cands)==1.
-      print(pick)
-      counts[pick] <- counts[pick] + 1
-      print(counts)
-      nmat[i, j] <- pick
-   }
-   # Assign more partners if desired:
-   # No need to check p > 1; the for statement as written will handle that.
-   for ( j in seq_len(p)[-1] ) {
-      for ( i in whonum ) {
-         cands <- whonum[ whonum != i & counts < j & whonum != nmat[i, j - 1] ]
-         cands <- whonum[ whonum != i & counts < j & !is.element(
-            whonum, nmat[i, -j] ) ]
-         pick <- cands[ sample.int( length(cands), size = 1 ) ]
-         print(pick)
-         counts[pick] <- counts[pick] + 1
-         print(counts)
-         nmat[i, j] <- pick
-      }
-   }
-   out <- who[ as.vector(nmat) ]
-   dim(out) <- c(n, p)
+   if ( n < 2 )
+      stop( paste( "What, exactly, is it you would like me to do",
+         "with input like that?" ) )
+   if ( p < 1 || p >= n )
+      stop( "Oy.  Why you give me p values like that?" )
+   # Construct a non-randomized latin square, excluding column 1.
+   # If wanted to include column 1, use:
+   #    out <- array(NA, c(n, n) )
+   #    out[, 1] <- nseq
+   #    ...
+   #    out[, i + 1] <- c(nseq[-(seq_len(i))], nseq[seq_len(i)])
+   nseq <- seq_len(n)
+   out <- array(NA, c(n, n - 1) )
+   for(i in nseq[-n])
+      out[, i] <- c(nseq[-(seq_len(i))], nseq[seq_len(i)])
+   # Pick a random subset of the columns.
+   out <- out[ , sample.int(n - 1, size = p), drop = FALSE ]
+   # Randomly permute who, and assign to the indices in out.
+   rwho <- who[ sample.int(n) ]
+   out[] <- rwho[ as.vector(out) ]
+   cnames <- paste("Partner", seq_len(p), sep = ".")
+   dimnames(out) <- list( as.character(rwho), cnames )
+   # Order by who, if desired.  Otherwise, put back in original who order.
+   if (orderMe)
+      out <- out[ order(rwho), , drop = FALSE ] 
+   else
+      out <- out[ match( who, rwho ), , drop = FALSE ] 
    out
 }
-
-# Also, add who as rownames to out.
-
-# OK.  Now this gave an error :-(
-# hookup(LETTERS[1:4], 2)
-# [1] 4
-# [1] 0 0 0 1
-# [1] 1
-# [1] 1 0 0 1
-# [1] 2
-# [1] 1 1 0 1
-# [1] 3
-# [1] 1 1 1 1
-# [1] 2
-# # [1] 1 2 1 1
-# [1] 4
-# [1] 1 2 1 2
-# [1] 1
-# [1] 2 2 1 2
-# Error in sample.int(length(cands), size = 1) : invalid first argument
-
-# OK, clear now.  This algorithm will NOT work in general.  WHEN it finds a
-# solution it finds a valid solution.  But, it will sometimes run into dead
-# ends, where no solution will be found.  Swaps would be needed to back out
-# of the dead ends.  Charles already has that type of solution.
-
-# Killing further development of this algorithm.  Will replace with a partial
-# latin square, which is guaranteed to work.  Not sure if ALL possible
-# allocations will be equally probably - suspect not - but should give a
-# pretty reasonable solution.
-
