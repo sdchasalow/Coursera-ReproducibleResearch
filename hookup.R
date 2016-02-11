@@ -56,5 +56,13 @@ hookup <- function( who, p = n - 1 ) {
 # [1] 2 2 1 2
 # Error in sample.int(length(cands), size = 1) : invalid first argument
 
-# MAYBE I should not check counts < j ??? Just check each time that counts < p?
+# OK, clear now.  This algorithm will NOT work in general.  WHEN it finds a
+# solution it finds a valid solution.  But, it will sometimes run into dead
+# ends, where no solution will be found.  Swaps would be needed to back out
+# of the dead ends.  Charles already has that type of solution.
+
+# Killing further development of this algorithm.  Will replace with a partial
+# latin square, which is guaranteed to work.  Not sure if ALL possible
+# allocations will be equally probably - suspect not - but should give a
+# pretty reasonable solution.
 
