@@ -1,8 +1,7 @@
 # Coursera-ReproducibleResearch
 Stuff for Course 5 (Reproducible Research) in the Data Sciences Specialization at Coursera
 
-## A handy code chunk for quickly exploring cross-validated error rates of
-## different potential predictors, one at a time
+## A handy code chunk for quickly exploring cross-validated error rates of different potential predictors, one at a time
 From a week-1 lecture, Structure of a Data Analysis (part 2):
 
     trainSpam$numType <- as.numeric(trainSpam$type) - 1
